@@ -1,6 +1,5 @@
 package assignment1;
 
-import javax.swing.text.StyleContext;
 import java.util.concurrent.Semaphore;
 
 public class Runner {
@@ -11,19 +10,25 @@ public class Runner {
         Semaphore tramSeats = new Semaphore(10);
         Semaphore touristsAtSummit = new Semaphore(50);
         Semaphore summitTickets = new Semaphore(50);
+        Semaphore baseStationComplete = new Semaphore(1);
+        Semaphore summitStationComplete = new Semaphore(1);
 
         touristWaitingBase.drainPermits();
         touristWaitingSummit.drainPermits();
+        baseStationComplete.tryAcquire();
+        summitStationComplete.tryAcquire();
 
-        BaseStation base = new BaseStation(touristWaitingBase);
+        BaseStation base = new BaseStation(touristWaitingBase, baseStationComplete);
         Thread baseThread = new Thread(base);
         baseThread.start();
 
-        SummitStation summit = new SummitStation(touristWaitingSummit, touristsAtSummit, summitTickets);
+        SummitStation summit = new SummitStation(touristWaitingSummit, touristsAtSummit, summitTickets,
+                summitStationComplete);
         Thread summitThread = new Thread(summit);
         summitThread.start();
 
-        Tram tram = new Tram(tramSeats, touristWaitingBase, touristWaitingSummit, touristsAtSummit, summitTickets);
+        Tram tram = new Tram(tramSeats, touristWaitingBase, touristWaitingSummit, touristsAtSummit, summitTickets,
+                baseStationComplete, summitStationComplete);
         Thread tramThread = new Thread(tram);
         tramThread.start();
     }
