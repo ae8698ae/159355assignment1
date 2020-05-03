@@ -3,23 +3,30 @@ package assignment1;
 import java.util.concurrent.Semaphore;
 
 public class Tram implements Runnable {
-    Semaphore touristWaitingBase, touristWaitingSummit, touristsAtSummit, tramSeats, summitTickets, baseStationComplete,
-    summitStationComplete;
+    final Semaphore touristWaitingBase;
+    final Semaphore touristWaitingSummit;
+    final Semaphore touristsAtSummit;
+    final Semaphore tramSeats;
+    final Semaphore summitTickets;
+    final Semaphore baseStationClosed;
+    final Semaphore summitStationClosed;
 
     Tram(Semaphore tramSeats, Semaphore touristWaitingBase, Semaphore touristWaitingSummit, Semaphore touristsAtSummit,
-         Semaphore summitTickets, Semaphore baseStationComplete, Semaphore summitStationComplete) {
+         Semaphore summitTickets, Semaphore baseStationClosed, Semaphore summitStationClosed) {
         this.touristWaitingBase = touristWaitingBase;
         this.touristsAtSummit = touristsAtSummit;
         this.touristWaitingSummit = touristWaitingSummit;
         this.tramSeats = tramSeats;
         this.summitTickets = summitTickets;
-        this.baseStationComplete = baseStationComplete;
-        this.summitStationComplete = summitStationComplete;
+        this.baseStationClosed = baseStationClosed;
+        this.summitStationClosed = summitStationClosed;
     }
 
     @Override
     public void run() {
-        while(baseStationComplete.availablePermits() == 0 & summitStationComplete.availablePermits() == 0) {
+        while(touristWaitingBase.availablePermits() != 0 || touristsAtSummit.availablePermits() != 50 ||
+                baseStationClosed.availablePermits() == 0 || summitStationClosed.availablePermits() ==0 ||
+                touristWaitingSummit.availablePermits() != 0) {
 
             try {
                 Thread.sleep(200);
@@ -31,24 +38,11 @@ public class Tram implements Runnable {
                 if (touristWaitingBase.tryAcquire()){
                     if(summitTickets.tryAcquire()){
                         tramSeats.release();
-                        System.out.println("A tourist sits down in the tram waiting to go up.");
+//                        System.out.println("A tourist sits down in the tram waiting to go up.");
                     }else{
                         touristWaitingBase.release();
                     }
                 }
-//                Boolean spaceOnSummit = summitTickets.tryAcquire();
-//                if (spaceOnSummit) {
-//                    if (touristWaitingBase.tryAcquire()){
-//                        System.out.println(i + " " + summitTickets.availablePermits());
-//                        tramSeats.release();
-//                    }else{
-//                        try {
-//                            Thread.sleep(100);
-//                        } catch (InterruptedException e) {}
-//                    }
-//                } else {
-//                    summitTickets.release();
-//                }
             }
             System.out.println("The cable car leaves with " + tramSeats.availablePermits() + " passenger(s) to the " +
                     "summit");
@@ -66,7 +60,7 @@ public class Tram implements Runnable {
                 if (touristWaitingSummit.tryAcquire()){
                     tramSeats.release();
                     summitTickets.release();
-                    System.out.println("A tourist sits down in the tram waiting to go down.");
+//                    System.out.println("A tourist sits down in the tram waiting to go down.");
                 } else {
                     try {
                         Thread.sleep(100);
@@ -77,12 +71,6 @@ public class Tram implements Runnable {
             System.out.println("The cable car leaves with " + tramSeats.availablePermits() + " passenger(s) to the " +
                     "foot of the mountain");
         }
-        System.out.println("There are " + touristWaitingBase.availablePermits() + " available touristWaitingBase permits");
-        System.out.println("There are " + touristWaitingSummit.availablePermits() + " available touristWaitingSummit permits");
-        System.out.println("There are " + touristsAtSummit.availablePermits() + " available touristsAtSummit permits");
-        System.out.println("There are " + tramSeats.availablePermits() + " available tramSeats permits");
-        System.out.println("There are " + summitTickets.availablePermits() + " available summitTickets permits");
-        System.out.println("There are " + baseStationComplete.availablePermits() + " available baseStationComplete permits");
-        System.out.println("There are " + summitStationComplete.availablePermits() + " available summitStationComplete permits");
+        System.out.println("The tram drops off the last passenger(s) and finishes for the day.");
     }
 }
