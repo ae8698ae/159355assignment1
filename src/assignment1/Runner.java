@@ -10,15 +10,15 @@ public class Runner {
         Semaphore touristWaitingSummit = new Semaphore(50);
         Semaphore tramSeats = new Semaphore(10);
         Semaphore touristsAtSummit = new Semaphore(50);
-        Semaphore summitTickets = new Semaphore(50);
         Semaphore baseStationClosed = new Semaphore(1);
         Semaphore summitStationClosed = new Semaphore(1);
+        Semaphore tramLoading = new Semaphore(1);
 
-        //Aquire all the permits for tourists at base and summit
+        //Acquire all the permits for tourists at base and summit
         touristWaitingBase.drainPermits();
         touristWaitingSummit.drainPermits();
 
-        //Aquire permits for the station states indicating the stations are open
+        //Acquire permits for the station states indicating the stations are open
         summitStationClosed.tryAcquire();
         baseStationClosed.tryAcquire();
 
@@ -28,13 +28,14 @@ public class Runner {
         baseThread.start();
 
         //Create summit station thread and start it
-        SummitStation summit = new SummitStation(touristWaitingSummit, touristsAtSummit, summitStationClosed);
+        SummitStation summit = new SummitStation(touristWaitingSummit, touristsAtSummit, summitStationClosed,
+                tramLoading, baseStationClosed);
         Thread summitThread = new Thread(summit);
         summitThread.start();
 
         //Create tram thread and start it
-        Tram tram = new Tram(tramSeats, touristWaitingBase, touristWaitingSummit, touristsAtSummit, summitTickets,
-                baseStationClosed, summitStationClosed);
+        Tram tram = new Tram(tramSeats, touristWaitingBase, touristWaitingSummit, touristsAtSummit, baseStationClosed,
+                summitStationClosed, tramLoading);
         Thread tramThread = new Thread(tram);
         tramThread.start();
     }
